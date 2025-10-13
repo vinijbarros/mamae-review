@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#F472B6"/>
+  
+  <!-- Heart Icon -->
+  <path d="M256 448C256 448 64 320 64 192C64 128 108 96 144 96C180 96 214 112 256 160C298 112 332 96 368 96C404 96 448 128 448 192C448 320 256 448 256 448Z" fill="white"/>
+  
+  <!-- Star Accent -->
+  <path d="M400 120L415 155L450 160L425 185L432 220L400 205L368 220L375 185L350 160L385 155L400 120Z" fill="#FFE8A1"/>
+</svg>
+

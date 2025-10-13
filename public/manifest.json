@@ -1,0 +1,33 @@
+{
+  "name": "Mamãe Review - Reviews de Produtos para Mães",
+  "short_name": "MamãeReview",
+  "description": "Plataforma de reviews de produtos para mamães gestantes e recentes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f472b6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "shopping", "social"],
+  "screenshots": [
+    {
+      "src": "/screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ]
+}
+
