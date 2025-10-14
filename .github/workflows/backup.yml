@@ -1,0 +1,66 @@
+name: Backup Firestore Diário
+
+on:
+  schedule:
+    # Executar todo dia às 02:00 UTC (23:00 horário de Brasília)
+    - cron: '0 2 * * *'
+  
+  # Permitir execução manual
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mamae-review/package-lock.json
+      
+      - name: Instalar dependências
+        working-directory: mamae-review
+        run: npm ci
+      
+      - name: Configurar credenciais do Firebase
+        working-directory: mamae-review
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account.json
+          echo "FIREBASE_SERVICE_ACCOUNT_PATH=./service-account.json" >> .env.local
+          echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" >> .env.local
+      
+      - name: Executar backup
+        working-directory: mamae-review
+        run: npx tsx scripts/backupFirestore.ts
+      
+      - name: Remover credenciais
+        working-directory: mamae-review
+        run: rm -f service-account.json .env.local
+      
+      - name: Configurar Git
+        run: |
+          git config --global user.name "Backup Bot"
+          git config --global user.email "bot@mamaereview.com"
+      
+      - name: Commit e Push do backup
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          git add mamae-review/backups/
+          git diff --staged --quiet || git commit -m "🗂️ Backup automático Firestore - $DATE"
+          git push
+      
+      - name: Notificar sucesso
+        if: success()
+        run: echo "✅ Backup concluído com sucesso!"
+      
+      - name: Notificar falha
+        if: failure()
+        run: echo "❌ Backup falhou! Verifique os logs."
+

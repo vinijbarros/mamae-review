@@ -75,3 +75,15 @@ Thumbs.db
 /public/worker-*.js.map
 *.sw.js
 *.sw.js.map
+
+# Backups
+/backups/
+backups/
+
+# Firebase Admin Credentials
+service-account.json
+*-service-account.json
+firebase-adminsdk-*.json
+
+# Scripts temporários
+/scripts/*.log

@@ -1,0 +1,17 @@
+{
+  "name": "mamae-review-scripts",
+  "version": "1.0.0",
+  "description": "Scripts de manutenção para Mamãe Review",
+  "private": true,
+  "scripts": {
+    "backup": "tsx backupFirestore.ts",
+    "restore": "tsx restoreFirestore.ts",
+    "cleanup": "tsx cleanupStorage.ts"
+  },
+  "keywords": [
+    "backup",
+    "firestore",
+    "maintenance"
+  ]
+}
+

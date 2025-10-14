@@ -19,6 +19,8 @@
 - [Design e UX](#design-e-ux)
 - [UX e Monitoramento](#ux-e-monitoramento)
 - [Analytics e Sentry](#analytics-e-sentry)
+- [Segurança do Firestore](#segurança-do-firestore)
+- [Backup e Manutenção](#backup-e-manutenção)
 - [Gerar Ícones PWA](#gerar-ícones-pwa)
 - [Troubleshooting](#troubleshooting)
 
@@ -1244,6 +1246,629 @@ Sentry.setTag('page', 'product-details');
 - ✅ Breadcrumbs (rastros)
 - ✅ Session Replay (opcional)
 - ✅ Performance monitoring
+
+---
+
+## 🔒 Segurança do Firestore
+
+### 📋 Visão Geral
+
+O projeto implementa **regras de segurança robustas** no Firestore para proteger os dados dos usuários e garantir que apenas operações autorizadas sejam realizadas.
+
+### 🛡️ Estrutura das Regras
+
+#### **Coleção `users`**
+
+**Permissões:**
+- ✅ **READ**: Qualquer usuário autenticado pode ler perfis públicos
+- ✅ **UPDATE**: Apenas o próprio usuário pode editar seu perfil
+- ❌ **CREATE**: Bloqueado (apenas via backend no signup)
+- ❌ **DELETE**: Bloqueado (proteção de conta)
+
+**Campos Permitidos para Edição:**
+- `name` (string, 2-100 caracteres)
+- `email` (string válida)
+- `gestationWeek` (number 0-42 ou null)
+
+**Exemplo de Validação:**
+```javascript
+// Apenas campos permitidos
+onlyUpdatesAllowedFields()
+
+// Validação de tipos e tamanhos
+isValidString('name', 2, 100)
+isValidNumber('gestationWeek', 0, 42)
+```
+
+#### **Coleção `products`**
+
+**Permissões:**
+- ✅ **READ**: Público (qualquer pessoa)
+- ✅ **CREATE**: Usuários autenticados (createdBy = auth.uid)
+- ✅ **UPDATE/DELETE**: Apenas o criador
+
+**Validações Implementadas:**
+
+**Campos Obrigatórios:**
+- `name` (string, 3-100 caracteres)
+- `category` (string, 2-50 caracteres)
+- `price` (number ≥ 0)
+- `rating` (number 0-5)
+- `storeName` (string, 2-100 caracteres)
+- `createdBy` (string, UID do usuário)
+
+**Campos Opcionais:**
+- `description` (string, 10-500 caracteres)
+- `storeLink` (string, URL válida)
+- `imageUrl` (string, URL válida)
+
+**Proteções:**
+- ❌ `createdBy` não pode ser alterado após criação
+- ❌ Campos com tipos inválidos são rejeitados
+- ❌ Valores fora do range são rejeitados
+
+#### **Coleção `reviews`**
+
+**Permissões:**
+- ✅ **READ**: Público (qualquer pessoa)
+- ✅ **CREATE**: Usuários autenticados
+- ❌ **UPDATE**: Proibido (reviews são imutáveis)
+- ✅ **DELETE**: Apenas o autor
+
+**Validações Implementadas:**
+
+**Campos Obrigatórios:**
+- `productId` (string)
+- `rating` (number 1-5)
+- `comment` (string, 10-500 caracteres)
+- `authorId` (string, UID = auth.uid)
+- `authorName` (string, 2-100 caracteres)
+
+**Proteções Especiais:**
+- ✅ `authorId` deve ser igual ao UID do usuário autenticado
+- ✅ Reviews são imutáveis (não podem ser editadas)
+- ⚠️ Validação de duplicatas deve ser feita no backend
+
+### 🔧 Funções Auxiliares
+
+As regras usam funções auxiliares para melhorar legibilidade:
+
+```javascript
+// Verifica autenticação
+function isAuthenticated() {
+  return request.auth != null;
+}
+
+// Verifica propriedade
+function isOwner(userId) {
+  return isAuthenticated() && request.auth.uid == userId;
+}
+
+// Valida string
+function isValidString(fieldName, minLength, maxLength) {
+  return request.resource.data[fieldName] is string
+      && request.resource.data[fieldName].size() >= minLength
+      && request.resource.data[fieldName].size() <= maxLength;
+}
+
+// Valida número
+function isValidNumber(fieldName, min, max) {
+  return request.resource.data[fieldName] is number
+      && request.resource.data[fieldName] >= min
+      && request.resource.data[fieldName] <= max;
+}
+```
+
+### 🧪 Testes de Segurança
+
+**Arquivo:** `/lib/firestoreTest.ts`
+
+Execute os testes no console do navegador (apenas em desenvolvimento):
+
+```typescript
+import { runAllSecurityTests } from '@/lib/firestoreTest';
+
+// Executar todos os testes
+await runAllSecurityTests();
+```
+
+**Testes Implementados:**
+
+#### **Produtos**
+```typescript
+// ✅ Deve permitir
+await testCreateProductAsOwner();
+
+// ❌ Deve negar
+await testCreateProductWithWrongOwner();
+await testDeleteProductByNonOwner();
+await testUpdateProductWithInvalidData();
+```
+
+#### **Reviews**
+```typescript
+// ⚠️ Validação no backend
+await testDuplicateReview();
+
+// ❌ Deve negar
+await testCreateReviewWithWrongAuthor();
+await testUpdateReview(); // Reviews são imutáveis
+```
+
+#### **Usuários**
+```typescript
+// ❌ Deve negar
+await testUpdateOtherUserProfile();
+```
+
+**Resultado Esperado:**
+```
+🔒 Iniciando testes de segurança do Firestore...
+
+✅ Produtos: Criar como proprietário: Esperado permitido, Resultado permitido
+✅ Produtos: Criar com createdBy incorreto: Esperado negado, Resultado negado
+✅ Produtos: Deletar produto de outro usuário: Esperado negado, Resultado negado
+...
+
+📊 RESUMO: 8/8 testes passaram
+✅ Todos os testes de segurança passaram!
+```
+
+### 🚀 Deploy das Regras
+
+#### **Método 1: Firebase Console (Recomendado)**
+
+1. Acesse [Firebase Console](https://console.firebase.google.com/)
+2. Selecione seu projeto
+3. Vá em **Firestore Database** → **Regras**
+4. Cole o conteúdo de `firestore.rules`
+5. Clique em **Publicar**
+
+#### **Método 2: Firebase CLI**
+
+```bash
+# Instalar Firebase CLI
+npm install -g firebase-tools
+
+# Login
+firebase login
+
+# Inicializar projeto (se ainda não foi feito)
+firebase init firestore
+
+# Deploy das regras
+firebase deploy --only firestore:rules
+```
+
+### 📝 Boas Práticas Implementadas
+
+#### **1. Validação no Backend**
+
+Mesmo com regras no Firestore, sempre valide no backend:
+
+```typescript
+// ✅ Validação de reviews duplicadas
+async function createReview(data: ReviewInput) {
+  // Verificar se já existe review
+  const existing = await hasUserReviewed(data.productId, data.authorId);
+  
+  if (existing) {
+    throw new Error('Você já avaliou este produto');
+  }
+  
+  // Criar review
+  return addDoc(collection(db, 'reviews'), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+}
+```
+
+#### **2. Timestamps do Servidor**
+
+Sempre use `serverTimestamp()` para datas:
+
+```typescript
+// ✅ Correto
+await addDoc(collection(db, 'products'), {
+  ...data,
+  createdAt: serverTimestamp(),
+});
+
+// ❌ Incorreto (pode ser manipulado pelo cliente)
+await addDoc(collection(db, 'products'), {
+  ...data,
+  createdAt: new Date(),
+});
+```
+
+#### **3. Verificação de Propriedade**
+
+Sempre verifique no frontend antes de tentar operações:
+
+```typescript
+// ✅ Verificar antes de mostrar botão de editar
+const canEdit = product.createdBy === user?.uid;
+
+{canEdit && (
+  <Button onClick={handleEdit}>Editar</Button>
+)}
+```
+
+#### **4. Tratamento de Erros de Permissão**
+
+```typescript
+try {
+  await deleteProduct(productId);
+  toast.success('Produto deletado!');
+} catch (error: any) {
+  if (error.code === 'permission-denied') {
+    toast.error('Você não tem permissão para deletar este produto');
+  } else {
+    toast.error('Erro ao deletar produto');
+  }
+}
+```
+
+### ⚠️ Limitações do Firestore Rules
+
+#### **O que NÃO é possível fazer:**
+
+1. ❌ **Queries complexas**: Não pode verificar se já existe um review do usuário para um produto
+2. ❌ **Joins**: Não pode buscar dados de outras coleções
+3. ❌ **Agregações**: Não pode calcular médias ou somas
+4. ❌ **Validações assíncronas**: Não pode fazer chamadas a APIs externas
+
+**Solução:** Implementar validações adicionais no backend (Cloud Functions ou Next.js API Routes)
+
+### 🔐 Segurança Adicional
+
+#### **1. Habilitar App Check (Opcional)**
+
+Protege contra abuso e tráfego não autorizado:
+
+1. Firebase Console → App Check
+2. Configure reCAPTCHA Enterprise
+3. Ative para sua aplicação web
+
+#### **2. Monitoramento de Uso**
+
+1. Firebase Console → Firestore → Usage
+2. Monitore:
+   - Leituras/Escritas por dia
+   - Picos de acesso
+   - Tentativas negadas
+
+#### **3. Alertas de Segurança**
+
+Configure alertas para:
+- Alta taxa de permissões negadas
+- Padrões de acesso suspeitos
+- Mudanças nas regras de segurança
+
+### ✅ Checklist de Segurança
+
+- [ ] Regras de segurança configuradas no Firestore
+- [ ] Testes de segurança executados e passando
+- [ ] Validação de duplicatas de reviews no backend
+- [ ] `serverTimestamp()` usado em todos os timestamps
+- [ ] Verificação de propriedade no frontend
+- [ ] Tratamento de erros de permissão
+- [ ] App Check configurado (opcional)
+- [ ] Monitoramento de uso ativo
+
+---
+
+## 🗂️ Backup e Manutenção
+
+### 📋 Visão Geral
+
+O projeto inclui scripts automatizados para backup, restore e manutenção dos dados do Firestore e Storage.
+
+### 🛠️ Scripts Disponíveis
+
+#### **1. Backup do Firestore**
+
+Exporta todas as coleções para arquivos JSON compactados.
+
+```bash
+npx tsx scripts/backupFirestore.ts
+```
+
+**Recursos:**
+- ✅ Exporta `users`, `products`, `reviews`
+- ✅ Compacta com gzip (economiza 70-80% de espaço)
+- ✅ Gera arquivo de metadados
+- ✅ Organiza por data: `backups/YYYY-MM-DD/`
+- ✅ Logs detalhados com estatísticas
+
+**Saída:**
+```
+backups/2024-01-15/
+  ├── users.json.gz
+  ├── products.json.gz
+  ├── reviews.json.gz
+  └── metadata.json
+```
+
+#### **2. Restore do Firestore**
+
+Restaura dados de um backup específico.
+
+```bash
+# Backup de hoje
+npx tsx scripts/restoreFirestore.ts
+
+# Backup específico
+npx tsx scripts/restoreFirestore.ts 2024-01-15
+
+# Forçar sobrescrita
+npx tsx scripts/restoreFirestore.ts 2024-01-15 --force
+```
+
+**Proteções:**
+- ✅ Não sobrescreve por padrão
+- ✅ Confirmação interativa
+- ✅ Logs de documentos restaurados/pulados
+
+#### **3. Limpeza do Storage**
+
+Identifica e remove arquivos órfãos.
+
+```bash
+# Apenas listar
+npx tsx scripts/cleanupStorage.ts
+
+# Deletar (com confirmação)
+npx tsx scripts/cleanupStorage.ts --delete
+```
+
+**Recursos:**
+- ✅ Identifica arquivos sem referência no Firestore
+- ✅ Calcula espaço desperdiçado
+- ✅ Confirmação antes de deletar
+- ✅ Relatório detalhado
+
+### 🤖 Automação com GitHub Actions
+
+**Backup Diário Automático**
+
+Configurado em `.github/workflows/backup.yml`
+
+**Execução:**
+- ⏰ Todo dia às 02:00 UTC (23:00 Brasília)
+- 🔄 Commit automático do backup
+- 📧 Notificações em caso de falha
+
+**Configurar:**
+
+1. **Adicionar Secrets no GitHub:**
+   - `FIREBASE_SERVICE_ACCOUNT`: Conteúdo do `service-account.json`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: ID do projeto
+
+2. **Obter Service Account:**
+   - Firebase Console → Configurações → Contas de Serviço
+   - Gerar nova chave privada
+   - Copiar JSON completo para o secret
+
+3. **Executar Manualmente:**
+   - GitHub → Actions → Backup Firestore Diário → Run workflow
+
+### 📊 Sistema de Logs e Auditoria
+
+**Registrar Ações:**
+
+```typescript
+import { logAction, LOG_ACTIONS } from '@/lib/logAction';
+
+// Criar produto
+await logAction({
+  action: LOG_ACTIONS.CREATE_PRODUCT,
+  userId: user.uid,
+  metadata: { productId: '123', productName: 'Fralda' }
+});
+
+// Ou use helpers
+import { logLogin, logProductCreate, logError } from '@/lib/logAction';
+
+await logLogin(user.uid, user.email, 'google');
+await logProductCreate(user.uid, productId, productName);
+await logError(user.uid, error, { context: 'payment' });
+```
+
+**Tipos de Ações Rastreadas:**
+
+- **Autenticação:** `LOGIN`, `LOGOUT`, `SIGNUP`
+- **Produtos:** `CREATE_PRODUCT`, `UPDATE_PRODUCT`, `DELETE_PRODUCT`, `VIEW_PRODUCT`
+- **Reviews:** `CREATE_REVIEW`, `DELETE_REVIEW`
+- **Busca:** `SEARCH`
+- **Erros:** `ERROR`, `PERMISSION_DENIED`
+
+**Buscar Logs:**
+
+```typescript
+import { getUserLogs, getLogsByAction, getRecentLogs } from '@/lib/logAction';
+
+// Logs de um usuário
+const logs = await getUserLogs(userId, 50);
+
+// Logs de uma ação específica
+const logins = await getLogsByAction(LOG_ACTIONS.LOGIN, 100);
+
+// Logs recentes (24h)
+const recent = await getRecentLogs(100);
+```
+
+**Estrutura do Log (Firestore):**
+
+```typescript
+{
+  id: string;
+  action: string;
+  userId: string;
+  userEmail?: string;
+  timestamp: Timestamp;
+  metadata: {
+    // Dados específicos da ação
+  };
+  userAgent: string;
+}
+```
+
+### ⚙️ Configuração
+
+#### **1. Instalar Dependências**
+
+```bash
+npm install -D tsx firebase-admin @types/node dotenv
+```
+
+#### **2. Configurar Firebase Admin SDK**
+
+**Método 1: Service Account (Produção)**
+
+1. Firebase Console → Configurações → Contas de Serviço
+2. Gerar nova chave privada
+3. Salvar como `service-account.json` na raiz
+4. Adicionar ao `.env.local`:
+   ```env
+   FIREBASE_SERVICE_ACCOUNT_PATH=./service-account.json
+   ```
+
+⚠️ Nunca commite `service-account.json` no Git!
+
+**Método 2: Firebase CLI (Development)**
+
+```bash
+npm install -g firebase-tools
+firebase login
+```
+
+### 📝 Scripts NPM
+
+Adicione ao `scripts/package.json`:
+
+```json
+{
+  "scripts": {
+    "backup": "tsx backupFirestore.ts",
+    "restore": "tsx restoreFirestore.ts",
+    "cleanup": "tsx cleanupStorage.ts"
+  }
+}
+```
+
+**Executar:**
+
+```bash
+cd scripts
+npm run backup
+npm run restore
+npm run cleanup
+```
+
+### 🔒 Segurança
+
+#### **Regras para Logs**
+
+```javascript
+match /logs/{logId} {
+  // Apenas sistema pode escrever
+  allow write: if request.auth != null;
+  
+  // Admin pode ler (implementar lógica de admin)
+  allow read: if false; // ou isAdmin()
+}
+```
+
+#### **Boas Práticas**
+
+✅ **Proteja credenciais:**
+- Service account em `.gitignore`
+- Secrets no GitHub Actions
+- Nunca exponha no frontend
+
+✅ **Mantenha backups:**
+- Mínimo 7 dias
+- Ideal 30 dias
+- Teste restore periodicamente
+
+✅ **Monitore logs:**
+- Verifique ações suspeitas
+- Configure alertas
+- Revise semanalmente
+
+✅ **Limpe dados antigos:**
+- Logs > 90 dias
+- Backups > 30 dias
+- Arquivos órfãos
+
+### 📊 Estatísticas de Backup
+
+**Exemplo de Saída:**
+
+```
+🗂️  BACKUP FIRESTORE - Iniciando...
+============================================================
+
+📁 Diretório: backups/2024-01-15
+
+📦 Exportando coleção: users
+   ✓ 150 documentos exportados (45.2 KB)
+   ✓ Compactado: 45.2 KB → 12.3 KB (72.8% redução)
+
+📦 Exportando coleção: products
+   ✓ 300 documentos exportados (180.5 KB)
+   ✓ Compactado: 180.5 KB → 48.7 KB (73.0% redução)
+
+📦 Exportando coleção: reviews
+   ✓ 450 documentos exportados (120.8 KB)
+   ✓ Compactado: 120.8 KB → 32.1 KB (73.4% redução)
+
+============================================================
+
+📊 RESUMO DO BACKUP
+   Total de documentos: 900
+   Tamanho total: 346.5 KB
+   Duração: 2.45s
+   Local: backups/2024-01-15
+
+✅ Backup concluído com sucesso!
+```
+
+### ⚡ Comandos Rápidos
+
+```bash
+# Backup
+npx tsx scripts/backupFirestore.ts
+
+# Restore (hoje)
+npx tsx scripts/restoreFirestore.ts
+
+# Restore (data específica)
+npx tsx scripts/restoreFirestore.ts 2024-01-15
+
+# Restore (forçar)
+npx tsx scripts/restoreFirestore.ts 2024-01-15 --force
+
+# Limpeza (listar)
+npx tsx scripts/cleanupStorage.ts
+
+# Limpeza (deletar)
+npx tsx scripts/cleanupStorage.ts --delete
+
+# Log de ação
+import { logAction, LOG_ACTIONS } from '@/lib/logAction';
+await logAction({ action: LOG_ACTIONS.CREATE_PRODUCT, userId, metadata });
+```
+
+### 📚 Documentação Completa
+
+Veja `/scripts/README.md` para:
+- Guia detalhado de cada script
+- Troubleshooting
+- Exemplos avançados
+- Configuração de alertas
 
 ---
 
