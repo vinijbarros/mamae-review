@@ -19,8 +19,15 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Mamãe Review",
-  description: "Plataforma de reviews de produtos para mamães gestantes e recentes",
+  title: {
+    default: "Mamãe Review - Reviews de Produtos para Mães",
+    template: "%s | Mamãe Review",
+  },
+  description: "Plataforma onde mamães gestantes e recentes compartilham reviews de produtos essenciais para a maternidade. Encontre as melhores recomendações da nossa comunidade.",
+  keywords: ["maternidade", "reviews", "produtos para bebê", "gestação", "mamães", "avaliações", "recomendações"],
+  authors: [{ name: "Mamãe Review" }],
+  creator: "Mamãe Review",
+  publisher: "Mamãe Review",
   manifest: "/manifest.json",
   themeColor: "#f472b6",
   appleWebApp: {
@@ -41,6 +48,39 @@ export const metadata: Metadata = {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: "https://mamae-review.vercel.app",
+    siteName: "Mamãe Review",
+    title: "Mamãe Review - Reviews de Produtos para Mães",
+    description: "Plataforma onde mamães compartilham reviews de produtos essenciais para a maternidade.",
+    images: [
+      {
+        url: "/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Mamãe Review",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mamãe Review - Reviews de Produtos para Mães",
+    description: "Encontre as melhores recomendações de produtos para mamães e bebês.",
+    images: ["/icon-512x512.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

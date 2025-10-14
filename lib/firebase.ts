@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 
 // Configuração do Firebase usando variáveis de ambiente
 const firebaseConfig = {
@@ -23,12 +24,22 @@ let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
 let storage: FirebaseStorage | undefined;
+let analytics: Analytics | undefined;
 
 if (isFirebaseConfigured) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
+  
+  // Analytics só funciona no browser
+  if (typeof window !== 'undefined') {
+    try {
+      analytics = getAnalytics(app);
+    } catch (error) {
+      console.warn('Analytics não pôde ser inicializado:', error);
+    }
+  }
 } else if (typeof window !== 'undefined') {
   // Apenas avisa no cliente, não no servidor durante o build
   console.warn(
@@ -38,6 +49,6 @@ if (isFirebaseConfigured) {
 }
 
 // Exporta os serviços com verificação de tipo
-export { auth, db, storage };
+export { auth, db, storage, analytics };
 export default app;
 

@@ -17,6 +17,10 @@
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Funcionalidades](#funcionalidades)
 - [Design e UX](#design-e-ux)
+- [UX e Monitoramento](#ux-e-monitoramento)
+- [Analytics e Sentry](#analytics-e-sentry)
+- [Gerar Ícones PWA](#gerar-ícones-pwa)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -1027,6 +1031,331 @@ mamae-review/
 - Cards verticais com toque confortável
 - Menu inferior com ícones grandes
 - Experiência otimizada para celular
+
+---
+
+## ✨ UX e Monitoramento
+
+### 📦 Componentes de Feedback Implementados
+
+#### **Skeleton** - Loading Placeholder
+```typescript
+import { Skeleton } from "@/components/ui/skeleton";
+
+<Skeleton className="h-4 w-[250px]" />
+```
+- Placeholder animado enquanto conteúdo carrega
+- Usa `animate-pulse` do Tailwind
+
+#### **Spinner** - Loading Indicator
+```typescript
+import { Spinner, Loading } from "@/components/ui/spinner";
+
+<Spinner size="lg" />
+<Loading text="Carregando produtos..." size="md" />
+```
+- 4 tamanhos: sm, md, lg, xl
+- Componente `Loading` com texto customizável
+
+#### **ProductCardSkeleton** - Grid de Loading
+```typescript
+import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
+
+{loading ? <ProductGridSkeleton count={8} /> : <ProductsGrid />}
+```
+
+#### **ConfirmDialog** - Modal de Confirmação
+```typescript
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+
+<ConfirmDialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Excluir Produto?"
+  description="Esta ação não pode ser desfeita."
+  confirmText="Sim, excluir"
+  onConfirm={handleDelete}
+  variant="destructive"
+  loading={isDeleting}
+/>
+```
+- Dialog reutilizável para confirmações
+- Variante `destructive` para ações perigosas
+- Estado de loading integrado
+
+### 🎬 Animações com Framer Motion
+
+#### Componentes Disponíveis
+
+**AnimatedPage** - Transição de página
+```typescript
+import { AnimatedPage } from "@/components/AnimatedPage";
+
+<AnimatedPage>
+  <YourContent />
+</AnimatedPage>
+```
+
+**FadeIn** - Fade suave
+```typescript
+<FadeIn delay={0.2}>
+  <Card>...</Card>
+</FadeIn>
+```
+
+**SlideIn** - Deslizar de uma direção
+```typescript
+<SlideIn direction="left" delay={0.1}>
+  <Content />
+</SlideIn>
+```
+
+**ScaleIn** - Crescer com fade
+```typescript
+<ScaleIn delay={0.3}>
+  <Button>...</Button>
+</ScaleIn>
+```
+
+**StaggerContainer + StaggerItem** - Animações em cascata
+```typescript
+<StaggerContainer staggerDelay={0.1}>
+  {items.map(item => (
+    <StaggerItem key={item.id}>
+      <ProductCard product={item} />
+    </StaggerItem>
+  ))}
+</StaggerContainer>
+```
+
+### 📱 Melhorias de Responsividade
+
+**CSS Global adicionado:**
+- ✅ Smooth scrolling
+- ✅ Tap highlight removido (touch devices)
+- ✅ Focus outlines melhorados (acessibilidade)
+
+**Grid Responsivo consistente:**
+- Mobile: 1 coluna
+- SM (640px+): 2 colunas
+- MD (768px+): 2-3 colunas
+- LG (1024px+): 3-4 colunas
+- XL (1280px+): 4-5 colunas
+
+---
+
+## 📊 Analytics e Sentry
+
+### 🔥 Firebase Analytics
+
+**Configuração:**
+- ✅ Inicializado em `/lib/firebase.ts`
+- ✅ Funções helper em `/lib/analytics.ts`
+- ✅ Rastreamento automático de page views
+
+**Rastrear Eventos:**
+```typescript
+import { trackProductView, trackReviewCreate, trackSearch } from '@/lib/analytics';
+
+// Visualização de produto
+trackProductView(productId, productName, category);
+
+// Criação de review
+trackReviewCreate(productId, rating);
+
+// Busca
+trackSearch(searchTerm, category, resultsCount);
+
+// Autenticação
+trackAuth('signup', 'email');
+trackAuth('login', 'google');
+
+// PWA
+trackPWA('install');
+```
+
+**Identificar Usuários:**
+```typescript
+import { setUserId, setUserProperties } from '@/lib/analytics';
+
+// Após login
+setUserId(user.uid);
+
+// Propriedades do usuário
+setUserProperties({
+  account_type: 'free',
+  preferred_category: 'Alimentação',
+});
+```
+
+**Visualizar Dados:**
+1. Firebase Console → Analytics → Dashboard
+2. Veja: Usuários ativos, Eventos, Jornada do usuário
+
+### 🐛 Sentry - Monitoramento de Erros
+
+**Arquivos Configurados:**
+- `sentry.client.config.ts` - Client-side
+- `sentry.server.config.ts` - Server-side
+- `sentry.edge.config.ts` - Edge runtime
+- `instrumentation.ts` - Initialization
+
+**Como Ativar:**
+
+1. Crie conta em [sentry.io](https://sentry.io)
+2. Crie projeto Next.js
+3. Copie o DSN
+4. Adicione ao `.env.local`:
+   ```env
+   NEXT_PUBLIC_SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
+   ```
+
+**Capturar Erros Manualmente:**
+```typescript
+import * as Sentry from '@sentry/nextjs';
+
+try {
+  await dangerousOperation();
+} catch (error) {
+  Sentry.captureException(error, {
+    tags: { section: 'payment' },
+    extra: { userId: user.id },
+  });
+  
+  toast.error('Algo deu errado');
+}
+```
+
+**Adicionar Contexto:**
+```typescript
+// Identificar usuário
+Sentry.setUser({
+  id: user.uid,
+  email: user.email,
+});
+
+// Adicionar tags
+Sentry.setTag('page', 'product-details');
+```
+
+**Recursos:**
+- ✅ Captura automática de erros
+- ✅ Source maps
+- ✅ Breadcrumbs (rastros)
+- ✅ Session Replay (opcional)
+- ✅ Performance monitoring
+
+---
+
+## 🎨 Gerar Ícones PWA
+
+Os ícones PWA precisam estar em formato PNG para o aplicativo funcionar corretamente.
+
+### 📋 Ícones Necessários
+
+- `icon-192x192.png` - Ícone pequeno
+- `icon-512x512.png` - Ícone grande
+- `screenshot1.png` - Screenshot opcional (1280x720)
+
+### 🚀 Método 1: Gerador Online (Recomendado)
+
+#### PWA Asset Generator
+
+1. Acesse: https://www.pwabuilder.com/imageGenerator
+2. Faça upload do arquivo `/public/icon.svg`
+3. Clique em "Generate"
+4. Baixe o ZIP com todos os ícones
+5. Copie os arquivos para `/public/`
+
+#### Favicon.io
+
+1. Acesse: https://favicon.io/favicon-converter/
+2. Faça upload do `/public/icon.svg`
+3. Baixe o pacote gerado
+4. Renomeie os arquivos conforme necessário
+
+### 🛠️ Método 2: Usando Sharp (Node.js)
+
+**Instalar Sharp:**
+```bash
+npm install --save-dev sharp
+```
+
+**Criar Script** (`scripts/generate-icons.js`):
+```javascript
+const sharp = require('sharp');
+const path = require('path');
+
+const sizes = [192, 512];
+const inputSVG = path.join(__dirname, '../public/icon.svg');
+const outputDir = path.join(__dirname, '../public');
+
+async function generateIcons() {
+  for (const size of sizes) {
+    const outputPath = path.join(outputDir, `icon-${size}x${size}.png`);
+    
+    await sharp(inputSVG)
+      .resize(size, size)
+      .png()
+      .toFile(outputPath);
+    
+    console.log(`✅ Gerado: icon-${size}x${size}.png`);
+  }
+}
+
+generateIcons().catch(console.error);
+```
+
+**Executar:**
+```bash
+node scripts/generate-icons.js
+```
+
+### 🎨 Método 3: Design Personalizado
+
+**Ferramentas:**
+- **Figma** (https://figma.com)
+- **Canva** (https://canva.com)
+- **Adobe Illustrator**
+
+**Especificações:**
+
+**192x192:**
+- Formato: PNG
+- Tamanho: 192x192 pixels
+- Fundo: Transparente ou branco
+- Margem: 20px ao redor do ícone
+
+**512x512:**
+- Formato: PNG
+- Tamanho: 512x512 pixels
+- Fundo: Transparente ou branco
+- Margem: 40px ao redor do ícone
+
+**Paleta de Cores (Mamãe Review):**
+- **Primária:** `#F472B6` (Rosa)
+- **Secundária:** `#C9E4CA` (Verde menta)
+- **Acento:** `#FFE8A1` (Amarelo)
+- **Background:** `#FFFFFF` (Branco)
+
+### ✅ Verificação
+
+Após gerar os ícones, verifique:
+
+```
+public/
+├── icon-192x192.png ✓
+├── icon-512x512.png ✓
+├── icon.svg ✓
+├── manifest.json ✓
+└── screenshot1.png (opcional)
+```
+
+**Testar:**
+1. Rode `npm run dev`
+2. Abra DevTools (F12)
+3. Vá para Application → Manifest
+4. Verifique se todos os ícones aparecem
 
 ---
 
