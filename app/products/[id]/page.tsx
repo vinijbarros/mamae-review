@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getProduct } from "@/lib/products";
 import { Product } from "@/types/product";
@@ -10,14 +10,15 @@ import { Star, Package, Store, Link as LinkIcon, DollarSign, ArrowLeft } from "l
 import { ProductReviews } from "@/components/ProductReviews";
 
 interface ProductDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>; // Agora é Promise no Next.js 15
 }
 
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const router = useRouter();
+  const resolvedParams = use(params); // Unwrap a Promise
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const productId = params.id;
+  const productId = resolvedParams.id;
 
   useEffect(() => {
     async function loadProduct() {
@@ -28,7 +29,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         if (fetchedProduct) {
           setProduct(fetchedProduct);
         } else {
-          router.push("/"); // Redirect if product not found
+          router.push("/");
         }
       } catch (error) {
         console.error("Erro ao carregar produto:", error);
@@ -131,4 +132,3 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     </div>
   );
 }
-
