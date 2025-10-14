@@ -24,7 +24,12 @@ if (!admin.apps.length) {
     const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
     
     if (serviceAccountPath) {
-      const serviceAccount = require(serviceAccountPath);
+      // Resolver caminho relativo à raiz do projeto
+      const absolutePath = path.isAbsolute(serviceAccountPath) 
+        ? serviceAccountPath 
+        : path.resolve(__dirname, '..', serviceAccountPath);
+      
+      const serviceAccount = require(absolutePath);
       
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
