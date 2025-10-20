@@ -200,7 +200,7 @@ export async function testDeleteProductByNonOwner(): Promise<TestResult> {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       if (data.createdBy !== auth?.currentUser?.uid) {
-        productToDelete = { id: doc.id, ...data };
+        productToDelete = { id: doc.id, createdBy: data.createdBy as string };
       }
     });
     
