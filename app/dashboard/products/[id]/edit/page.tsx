@@ -13,6 +13,8 @@ import { uploadImage, createImagePreview } from "@/lib/upload";
 import { PRODUCT_CATEGORIES, Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
+import { RatingInput } from "@/components/ui/rating-input";
 import {
   Card,
   CardContent,
@@ -104,6 +106,9 @@ function EditProductContent() {
 
       setProduct(productData);
       setImagePreview(productData.imageUrl);
+
+      console.log('📥 Produto carregado do Firestore:', productData);
+      console.log('⭐ Rating original:', productData.rating, 'tipo:', typeof productData.rating);
 
       // Preenche o formulário
       form.reset({
@@ -361,15 +366,17 @@ function EditProductContent() {
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preço (R$)</FormLabel>
+                      <FormLabel>Preço</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
+                        <PriceInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="0,00"
                         />
                       </FormControl>
+                      <FormDescription>
+                        Digite o preço em reais (ex: 129,90)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -381,15 +388,12 @@ function EditProductContent() {
                   name="rating"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Avaliação (0-5)</FormLabel>
+                      <FormLabel>Avaliação</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="5"
-                          placeholder="4.5"
-                          {...field}
+                        <RatingInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="0.0"
                         />
                       </FormControl>
                       <FormDescription>
