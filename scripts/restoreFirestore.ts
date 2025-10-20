@@ -27,7 +27,7 @@ const forceOverwrite = args.includes('--force');
 
 interface DocumentBackup {
   id: string;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 /**
@@ -50,7 +50,7 @@ function askQuestion(question: string): Promise<string> {
 /**
  * Descompacta arquivo gzip
  */
-function decompressFile(gzipPath: string): any[] {
+function decompressFile(gzipPath: string): DocumentBackup[] {
   const compressed = fs.readFileSync(gzipPath);
   const decompressed = zlib.gunzipSync(compressed);
   return JSON.parse(decompressed.toString());

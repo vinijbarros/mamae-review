@@ -66,7 +66,7 @@ async function exportCollection(collectionName: string): Promise<{ count: number
   
   try {
     const snapshot = await adminDb.collection(collectionName).get();
-    const documents: any[] = [];
+    const documents: Array<{ id: string; data: Record<string, unknown> }> = [];
     
     snapshot.forEach((doc) => {
       documents.push({
@@ -136,7 +136,7 @@ async function runBackup(): Promise<void> {
     // Salvar JSON
     const jsonPath = path.join(backupDir, `${collectionName}.json`);
     const snapshot = await adminDb.collection(collectionName).get();
-    const documents: any[] = [];
+    const documents: Array<{ id: string; data: Record<string, unknown> }> = [];
     
     snapshot.forEach((doc) => {
       documents.push({

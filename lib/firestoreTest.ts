@@ -37,7 +37,7 @@ import {
 type TestResult = {
   success: boolean;
   message: string;
-  error?: any;
+  error?: unknown;
 };
 
 // =====================================
@@ -61,7 +61,7 @@ function formatResult(
   testName: string,
   expected: 'permitido' | 'negado',
   actual: 'permitido' | 'negado',
-  error?: any
+  error?: unknown
 ): TestResult {
   const success = expected === actual;
   const emoji = success ? '✅' : '❌';
@@ -114,7 +114,7 @@ export async function testCreateProductAsOwner(): Promise<TestResult> {
       'permitido',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return formatResult(
       'Criar produto como proprietário',
       'permitido',
@@ -158,9 +158,10 @@ export async function testCreateProductWithWrongOwner(): Promise<TestResult> {
       'negado',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Esperamos que falhe
-    if (error.code === 'permission-denied') {
+    const firebaseError = error as { code?: string; message?: string };
+    if (firebaseError.code === 'permission-denied') {
       return formatResult(
         'Criar produto com createdBy incorreto',
         'negado',
@@ -195,7 +196,7 @@ export async function testDeleteProductByNonOwner(): Promise<TestResult> {
     const q = query(collection(db, 'products'));
     const querySnapshot = await getDocs(q);
     
-    let productToDelete: any = null;
+    let productToDelete: { id: string; createdBy: string } | null = null;
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       if (data.createdBy !== auth?.currentUser?.uid) {
@@ -218,9 +219,10 @@ export async function testDeleteProductByNonOwner(): Promise<TestResult> {
       'negado',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Esperamos que falhe
-    if (error.code === 'permission-denied') {
+    const firebaseError = error as { code?: string; message?: string };
+    if (firebaseError.code === 'permission-denied') {
       return formatResult(
         'Deletar produto de outro usuário',
         'negado',
@@ -280,9 +282,10 @@ export async function testUpdateProductWithInvalidData(): Promise<TestResult> {
       'negado',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Esperamos que falhe
-    if (error.code === 'permission-denied') {
+    const firebaseError = error as { code?: string; message?: string };
+    if (firebaseError.code === 'permission-denied') {
       return formatResult(
         'Atualizar produto com dados inválidos',
         'negado',
@@ -362,7 +365,7 @@ export async function testDuplicateReview(): Promise<TestResult> {
       success: false,
       message: '⚠️ Review duplicada foi permitida (validação deve ser no backend)',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return formatResult(
       'Criar review duplicada',
       'negado',
@@ -413,9 +416,10 @@ export async function testCreateReviewWithWrongAuthor(): Promise<TestResult> {
       'negado',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Esperamos que falhe
-    if (error.code === 'permission-denied') {
+    const firebaseError = error as { code?: string; message?: string };
+    if (firebaseError.code === 'permission-denied') {
       return formatResult(
         'Criar review com authorId incorreto',
         'negado',
@@ -472,9 +476,10 @@ export async function testUpdateReview(): Promise<TestResult> {
       'negado',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Esperamos que falhe
-    if (error.code === 'permission-denied') {
+    const firebaseError = error as { code?: string; message?: string };
+    if (firebaseError.code === 'permission-denied') {
       return formatResult(
         'Atualizar review (imutável)',
         'negado',
@@ -521,9 +526,10 @@ export async function testUpdateOtherUserProfile(): Promise<TestResult> {
       'negado',
       'permitido'
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Esperamos que falhe
-    if (error.code === 'permission-denied') {
+    const firebaseError = error as { code?: string; message?: string };
+    if (firebaseError.code === 'permission-denied') {
       return formatResult(
         'Atualizar perfil de outro usuário',
         'negado',
@@ -575,10 +581,12 @@ export async function runAllSecurityTests(): Promise<void> {
       results.push(result);
       console.log(result.message);
       if (result.error) {
-        console.log('   Erro:', result.error.message || result.error);
+        const errorObj = result.error as { message?: string };
+        console.log('   Erro:', errorObj.message || result.error);
       }
-    } catch (error: any) {
-      console.error(`   ❌ Erro ao executar teste: ${error.message}`);
+    } catch (error: unknown) {
+      const errorObj = error as { message?: string };
+      console.error(`   ❌ Erro ao executar teste: ${errorObj.message || 'Erro desconhecido'}`);
       results.push({
         success: false,
         message: `❌ ${test.name}: Erro ao executar`,
