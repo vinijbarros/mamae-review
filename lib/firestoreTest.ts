@@ -211,8 +211,8 @@ export async function testDeleteProductByNonOwner(): Promise<TestResult> {
       };
     }
     
-    // Tentar deletar
-    await deleteDoc(doc(db, 'products', productToDelete.id));
+    // Tentar deletar (asserção não-nula é segura aqui devido à verificação acima)
+    await deleteDoc(doc(db, 'products', productToDelete!.id));
     
     return formatResult(
       'Deletar produto de outro usuário',
