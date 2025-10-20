@@ -81,3 +81,100 @@ html {
     font-family: 'Nunito', 'Poppins', sans-serif;
   }
 }
+
+/* ============================================
+   Animação de bordas para botões de navegação
+   ============================================ */
+
+.nav-button-animated {
+  position: relative;
+  overflow: visible;
+  transition: color 0.3s ease;
+}
+
+/* Remove a borda padrão do hover do botão ghost */
+.nav-button-animated:hover {
+  background-color: transparent !important;
+}
+
+/* Pseudo-elementos para criar as bordas animadas */
+.nav-button-animated::before,
+.nav-button-animated::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: all 0.4s ease;
+  box-sizing: border-box;
+}
+
+/* Borda superior e direita */
+.nav-button-animated::before {
+  top: 0;
+  right: 0;
+  border-top: 2px solid transparent;
+  border-right: 2px solid transparent;
+}
+
+/* Borda inferior e esquerda */
+.nav-button-animated::after {
+  bottom: 0;
+  left: 0;
+  border-bottom: 2px solid transparent;
+  border-left: 2px solid transparent;
+}
+
+/* Animação ao passar o mouse */
+.nav-button-animated:hover::before,
+.nav-button-animated:hover::after {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+}
+
+/* Cores das bordas no tema claro e escuro */
+.nav-button-animated:hover::before {
+  border-top-color: hsl(var(--primary));
+  border-right-color: hsl(var(--primary));
+}
+
+.nav-button-animated:hover::after {
+  border-bottom-color: hsl(var(--primary));
+  border-left-color: hsl(var(--primary));
+}
+
+/* Efeito adicional no texto */
+.nav-button-animated:hover {
+  color: hsl(var(--primary));
+}
+
+/* Animação mais suave para o texto */
+.nav-button-animated span {
+  transition: transform 0.3s ease;
+}
+
+.nav-button-animated:hover span {
+  transform: scale(1.05);
+}
+
+/* Ajuste para arredondar os cantos das bordas */
+.nav-button-animated::before,
+.nav-button-animated::after {
+  border-radius: 0.75rem; /* rounded-xl do Tailwind */
+}
+
+/* Variante com efeito de brilho (opcional) */
+@keyframes border-glow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+.nav-button-animated:hover::before,
+.nav-button-animated:hover::after {
+  animation: border-glow 2s ease-in-out infinite;
+}

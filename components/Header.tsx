@@ -36,13 +36,13 @@ export function Header() {
               {user ? (
                 <>
                   <Link href="/dashboard">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="nav-button-animated">
                       Dashboard
                     </Button>
                   </Link>
 
                   <Link href="/dashboard/products">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="nav-button-animated">
                       Produtos
                     </Button>
                   </Link>
