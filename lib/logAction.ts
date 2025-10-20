@@ -51,7 +51,7 @@ export interface Log {
   userId: string;
   userEmail?: string;
   timestamp: Timestamp | Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   userAgent?: string;
   ip?: string;
 }
@@ -60,7 +60,7 @@ export interface LogInput {
   action: LogAction;
   userId: string;
   userEmail?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -252,7 +252,7 @@ export async function logProductCreate(
 export async function logError(
   userId: string,
   error: Error,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): Promise<string> {
   return logAction({
     action: LOG_ACTIONS.ERROR,

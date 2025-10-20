@@ -107,9 +107,6 @@ function EditProductContent() {
       setProduct(productData);
       setImagePreview(productData.imageUrl);
 
-      console.log('📥 Produto carregado do Firestore:', productData);
-      console.log('⭐ Rating original:', productData.rating, 'tipo:', typeof productData.rating);
-
       // Preenche o formulário
       form.reset({
         name: productData.name,

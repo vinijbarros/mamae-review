@@ -136,12 +136,6 @@ function NewProductContent() {
       }
 
       // Cria o produto
-      console.log('📝 Dados do produto a serem salvos:', {
-        ...data,
-        imageUrl,
-        createdBy: user.uid,
-      });
-      
       await createProduct({
         ...data,
         imageUrl,
