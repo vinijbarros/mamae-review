@@ -196,23 +196,23 @@ export async function testDeleteProductByNonOwner(): Promise<TestResult> {
     const q = query(collection(db, 'products'));
     const querySnapshot = await getDocs(q);
     
-    let productToDelete: { id: string; createdBy: string } | null = null;
+    let productToDeleteId: string | null = null;
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       if (data.createdBy !== auth?.currentUser?.uid) {
-        productToDelete = { id: doc.id, createdBy: data.createdBy as string };
+        productToDeleteId = doc.id;
       }
     });
     
-    if (!productToDelete) {
+    if (!productToDeleteId) {
       return {
         success: false,
         message: '⚠️ Nenhum produto de outro usuário encontrado para teste',
       };
     }
     
-    // Tentar deletar (asserção não-nula é segura aqui devido à verificação acima)
-    await deleteDoc(doc(db, 'products', productToDelete!.id));
+    // Tentar deletar
+    await deleteDoc(doc(db, 'products', productToDeleteId));
     
     return formatResult(
       'Deletar produto de outro usuário',
