@@ -45,7 +45,7 @@ import { toast } from "sonner";
 const productSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres").max(100),
   category: z.string().min(1, "Selecione uma categoria"),
-  description: z.string().min(10, "Descrição deve ter no mínimo 10 caracteres").max(500),
+  description: z.string().min(150, "Descrição deve ter no mínimo 150 caracteres").max(500, "Descrição deve ter no máximo 500 caracteres"),
   rating: z.number().min(0, "Mínimo 0").max(5, "Máximo 5"),
   price: z.number().min(0, "Preço deve ser maior que zero"),
   storeName: z.string().min(2, "Nome da loja é obrigatório").max(100),
@@ -345,11 +345,32 @@ function EditProductContent() {
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <textarea
-                        className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                        placeholder="Descreva o produto, suas características, benefícios..."
-                        {...field}
-                      />
+                      <div className="space-y-2">
+                        <textarea
+                          className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                          placeholder="Descreva o produto, suas características, benefícios... (mínimo 150 caracteres)"
+                          {...field}
+                        />
+                        <div className="flex justify-between text-sm">
+                          <span className={`${
+                            field.value.length < 150 
+                              ? 'text-red-500' 
+                              : field.value.length > 500 
+                                ? 'text-red-500' 
+                                : 'text-muted-foreground'
+                          }`}>
+                            {field.value.length < 150 
+                              ? `Mínimo 150 caracteres (${150 - field.value.length} restantes)`
+                              : `${field.value.length}/500 caracteres`
+                            }
+                          </span>
+                          {field.value.length > 500 && (
+                            <span className="text-red-500">
+                              Máximo 500 caracteres excedido
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
