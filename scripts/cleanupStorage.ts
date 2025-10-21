@@ -138,7 +138,8 @@ async function runCleanup(): Promise<void> {
   for (const file of orphanFiles) {
     try {
       const [metadata] = await bucket.file(file).getMetadata();
-      totalSize += parseInt(metadata.size || '0', 10);
+      const size = metadata.size;
+      totalSize += typeof size === 'string' ? parseInt(size, 10) : (size || 0);
     } catch (error) {
       // Ignorar erros de metadata
     }
