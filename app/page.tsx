@@ -105,9 +105,7 @@ export default function Home() {
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          A plataforma onde mamães gestantes e recentes compartilham reviews 
-          de produtos essenciais para a maternidade. Encontre as melhores 
-          recomendações da nossa comunidade.
+          Plataforma para famílias e cuidadores compartilharem suas experiências e indicarem produtos essenciais para o enxoval e primeiros anos dos bebês. Encontre as melhores recomendações na nossa comunidade.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
