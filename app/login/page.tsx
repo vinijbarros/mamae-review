@@ -9,6 +9,7 @@ import * as z from "zod";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BackButton } from "@/components/BackButton";
 import {
   Card,
   CardContent,
@@ -119,15 +120,18 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Bem-vinda de volta!
-          </CardTitle>
-          <CardDescription className="text-center">
-            Faça login para continuar
-          </CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-md space-y-4">
+        <BackButton href="/" />
+        
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">
+              Bem-vinda de volta!
+            </CardTitle>
+            <CardDescription className="text-center">
+              Faça login para continuar
+            </CardDescription>
+          </CardHeader>
         <CardContent className="space-y-4">
           {error && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
@@ -185,13 +189,13 @@ export default function LoginPage() {
             </form>
           </Form>
 
-          <div className="relative">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <div className="w-full border-t border-gray-200"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou continue com
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-gray-500 font-medium">
+                ou continue com
               </span>
             </div>
           </div>
@@ -240,7 +244,8 @@ export default function LoginPage() {
             </Link>
           </div>
         </CardFooter>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

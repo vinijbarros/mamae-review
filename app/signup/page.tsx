@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { createUserProfile } from "@/lib/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BackButton } from "@/components/BackButton";
 import {
   Card,
   CardContent,
@@ -59,6 +60,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -91,8 +93,17 @@ export default function SignupPage() {
         gestationWeek: null,
       });
 
+      // Mostrar mensagem de sucesso
+      setSuccess(true);
+      
+      // Aguardar um pouco para mostrar a mensagem de sucesso
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       // Redirecionar para dashboard
       router.push("/dashboard");
+      
+      // Forçar reload da página para garantir que o estado seja atualizado
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error("Erro ao criar conta:", err);
       
@@ -134,7 +145,17 @@ export default function SignupPage() {
         gestationWeek: null,
       });
 
+      // Mostrar mensagem de sucesso
+      setSuccess(true);
+      
+      // Aguardar um pouco para mostrar a mensagem de sucesso
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Redirecionar para dashboard
       router.push("/dashboard");
+      
+      // Forçar reload da página para garantir que o estado seja atualizado
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error("Erro ao fazer cadastro com Google:", err);
       
@@ -162,19 +183,28 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Criar conta
-          </CardTitle>
-          <CardDescription className="text-center">
-            Cadastre-se para começar a avaliar produtos
-          </CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-md space-y-4">
+        <BackButton href="/" />
+        
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">
+              Criar conta
+            </CardTitle>
+            <CardDescription className="text-center">
+              Cadastre-se para começar a avaliar produtos
+            </CardDescription>
+          </CardHeader>
         <CardContent className="space-y-4">
           {error && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 text-sm text-green-800 bg-green-50 border border-green-200 rounded-md">
+              ✅ Conta criada com sucesso! Redirecionando...
             </div>
           )}
 
@@ -190,7 +220,7 @@ export default function SignupPage() {
                       <Input
                         placeholder="Maria da Silva"
                         {...field}
-                        disabled={isLoading || isLoadingGoogle}
+                        disabled={isLoading || isLoadingGoogle || success}
                       />
                     </FormControl>
                     <FormMessage />
@@ -209,7 +239,7 @@ export default function SignupPage() {
                         type="email"
                         placeholder="seu@email.com"
                         {...field}
-                        disabled={isLoading || isLoadingGoogle}
+                        disabled={isLoading || isLoadingGoogle || success}
                       />
                     </FormControl>
                     <FormMessage />
@@ -228,7 +258,7 @@ export default function SignupPage() {
                         type="password"
                         placeholder="••••••••"
                         {...field}
-                        disabled={isLoading || isLoadingGoogle}
+                        disabled={isLoading || isLoadingGoogle || success}
                       />
                     </FormControl>
                     <FormMessage />
@@ -247,7 +277,7 @@ export default function SignupPage() {
                         type="password"
                         placeholder="••••••••"
                         {...field}
-                        disabled={isLoading || isLoadingGoogle}
+                        disabled={isLoading || isLoadingGoogle || success}
                       />
                     </FormControl>
                     <FormMessage />
@@ -258,20 +288,20 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || isLoadingGoogle}
+                disabled={isLoading || isLoadingGoogle || success}
               >
                 {isLoading ? "Criando conta..." : "Criar conta"}
               </Button>
             </form>
           </Form>
 
-          <div className="relative">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <div className="w-full border-t border-gray-200"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou continue com
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-gray-500 font-medium">
+                ou continue com
               </span>
             </div>
           </div>
@@ -320,7 +350,8 @@ export default function SignupPage() {
             </Link>
           </div>
         </CardFooter>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

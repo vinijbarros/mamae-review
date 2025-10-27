@@ -41,7 +41,7 @@ export function Header() {
                     </Button>
                   </Link>
 
-                  <Link href="/dashboard/products">
+                  <Link href="/products">
                     <Button variant="ghost" size="sm" className="nav-button-animated">
                       Produtos
                     </Button>

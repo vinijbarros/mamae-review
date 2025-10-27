@@ -472,26 +472,17 @@ export async function searchProducts(
   }
 
   try {
-    // Query base: ordena por rating
-    let q = query(
+    // Query simplificada: apenas ordena por rating sem filtros
+    // Os filtros serão aplicados client-side para evitar problemas de índice
+    const q = query(
       collection(db, 'products'),
       orderBy('rating', 'desc'),
-      limit(limitCount)
+      limit(limitCount * 2) // Carrega mais para compensar filtros client-side
     );
-
-    // Se houver filtro de categoria, adicionar ao query
-    if (category && category !== 'all') {
-      q = query(
-        collection(db, 'products'),
-        where('category', '==', category),
-        orderBy('rating', 'desc'),
-        limit(limitCount)
-      );
-    }
 
     // Executa query
     const querySnapshot = await getDocs(q);
-    let products: Product[] = [];
+    const products: Product[] = [];
 
     // Converte documentos para objetos Product
     querySnapshot.forEach((doc) => {
@@ -501,10 +492,20 @@ export async function searchProducts(
       } as Product);
     });
 
-    // Filtro de busca textual (client-side) por limitação do Firestore
+    // Aplicar filtros client-side
+    let filteredProducts = products;
+
+    // Filtro por categoria (client-side)
+    if (category && category !== 'all') {
+      filteredProducts = filteredProducts.filter((product) => 
+        product.category === category
+      );
+    }
+
+    // Filtro de busca textual (client-side)
     if (searchTerm && searchTerm.trim() !== '') {
       const searchLower = searchTerm.toLowerCase();
-      products = products.filter((product) => {
+      filteredProducts = filteredProducts.filter((product) => {
         return (
           product.name.toLowerCase().includes(searchLower) ||
           product.storeName.toLowerCase().includes(searchLower) ||
@@ -514,9 +515,73 @@ export async function searchProducts(
       });
     }
 
-    return products;
+    // Limita o resultado final
+    return filteredProducts.slice(0, limitCount);
   } catch (error) {
     console.error('❌ Erro ao buscar produtos:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca produtos relacionados por categoria.
+ * 
+ * Retorna produtos da mesma categoria, excluindo o produto atual.
+ * Usado para mostrar "produtos relacionados" na página de detalhes.
+ * 
+ * @param {string} category - Categoria dos produtos
+ * @param {string} excludeProductId - ID do produto a excluir
+ * @param {number} limitCount - Quantidade máxima de produtos (padrão: 4)
+ * 
+ * @returns {Promise<Product[]>} Lista de produtos relacionados
+ * 
+ * @throws {Error} Se Firestore não estiver configurado
+ * 
+ * @example
+ * ```typescript
+ * // Buscar produtos relacionados
+ * const relatedProducts = await getRelatedProducts('Transporte', 'abc123', 4);
+ * ```
+ */
+export async function getRelatedProducts(
+  category: string,
+  excludeProductId: string,
+  limitCount: number = 4
+): Promise<Product[]> {
+  if (!db) {
+    throw new Error('Firestore não está configurado');
+  }
+
+  try {
+    // Query simplificada: busca produtos da mesma categoria sem ordenação
+    // A ordenação será aplicada client-side para evitar problemas de índice
+    const q = query(
+      collection(db, 'products'),
+      where('category', '==', category),
+      limit(limitCount + 1) // +1 para compensar a exclusão
+    );
+
+    // Executa query
+    const querySnapshot = await getDocs(q);
+    const products: Product[] = [];
+
+    // Converte documentos para objetos Product
+    querySnapshot.forEach((doc) => {
+      products.push({
+        id: doc.id,
+        ...doc.data(),
+      } as Product);
+    });
+
+    // Filtra o produto atual, ordena por rating e limita a quantidade
+    const filteredProducts = products
+      .filter(product => product.id !== excludeProductId)
+      .sort((a, b) => b.rating - a.rating) // Ordenação client-side por rating
+      .slice(0, limitCount);
+
+    return filteredProducts;
+  } catch (error) {
+    console.error('❌ Erro ao buscar produtos relacionados:', error);
     throw error;
   }
 }

@@ -81,8 +81,9 @@ service cloud.firestore {
       // LEITURA: Qualquer usuário autenticado pode ler perfis públicos
       allow read: if isAuthenticated();
       
-      // CRIAÇÃO: Bloqueada (apenas via backend controlado no signup)
-      allow create: if false;
+      // CRIAÇÃO: Permitida para usuários autenticados criando seu próprio perfil
+      allow create: if isAuthenticated()
+                    && request.auth.uid == userId;
       
       // ATUALIZAÇÃO: Apenas o próprio usuário pode editar seu perfil
       allow update: if isOwner(userId)
@@ -102,9 +103,9 @@ service cloud.firestore {
       // Valida os dados do usuário
       function validUserData() {
         return (
-          // Name: string de 2-100 caracteres
+          // Name: string de 1-100 caracteres (mais flexível para criação)
           (!('name' in request.resource.data) || 
-           isValidString('name', 2, 100))
+           isValidString('name', 1, 100))
           &&
           // Email: string válida
           (!('email' in request.resource.data) || 
@@ -210,8 +211,7 @@ service cloud.firestore {
       allow create: if isAuthenticated()
                     && request.resource.data.authorId == request.auth.uid
                     && validReviewData()
-                    && hasRequiredReviewFields()
-                    && !userAlreadyReviewedProduct();
+                    && hasRequiredReviewFields();
       
       // ATUALIZAÇÃO: Proibida (reviews são imutáveis)
       allow update: if false;
@@ -222,11 +222,11 @@ service cloud.firestore {
       
       // Verifica se todos os campos obrigatórios estão presentes
       function hasRequiredReviewFields() {
-        return hasValidField('productId')
-            && hasValidField('authorId')
-            && hasValidField('authorName')
-            && hasValidField('comment')
-            && 'rating' in request.resource.data;
+        return request.resource.data.productId is string
+            && request.resource.data.authorId is string
+            && request.resource.data.authorName is string
+            && request.resource.data.comment is string
+            && request.resource.data.rating is number;
       }
       
       // Valida os dados da review
@@ -236,20 +236,22 @@ service cloud.firestore {
           request.resource.data.productId is string
           &&
           // Rating: number entre 1 e 5
-          isValidNumber('rating', 1, 5)
+          request.resource.data.rating is number
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
           &&
-          // Comment: string de 10-500 caracteres
-          isValidString('comment', 10, 500)
+          // Comment: string de 150-500 caracteres
+          request.resource.data.comment is string
+          && request.resource.data.comment.size() >= 150
+          && request.resource.data.comment.size() <= 500
           &&
           // AuthorId: string (UID)
           request.resource.data.authorId is string
           &&
           // AuthorName: string de 2-100 caracteres
-          isValidString('authorName', 2, 100)
-          &&
-          // CreatedAt: timestamp (se presente)
-          (!('createdAt' in request.resource.data) || 
-           request.resource.data.createdAt is timestamp)
+          request.resource.data.authorName is string
+          && request.resource.data.authorName.size() >= 2
+          && request.resource.data.authorName.size() <= 100
         );
       }
       
@@ -260,6 +262,7 @@ service cloud.firestore {
         // Esta função retorna false para permitir a criação
         // A validação real de duplicatas deve ser feita no backend
         // pois o Firestore Rules não pode fazer queries complexas
+        // Por enquanto, sempre permite a criação (validação no frontend)
         return false;
       }
     }
