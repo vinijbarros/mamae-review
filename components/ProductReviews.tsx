@@ -46,7 +46,7 @@ const reviewSchema = z.object({
   rating: z.number().min(1, "Selecione uma avaliação").max(5),
   comment: z
     .string()
-    .min(10, "Comentário deve ter no mínimo 10 caracteres")
+    .min(150, "Comentário deve ter no mínimo 150 caracteres")
     .max(500, "Comentário deve ter no máximo 500 caracteres"),
 });
 
@@ -216,15 +216,15 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
       {user && !hasReviewed && (
         <Card>
           <CardHeader>
-            <CardTitle>Deixe sua Avaliação</CardTitle>
+            <CardTitle>Como foi sua experiência com o produto?</CardTitle>
             <CardDescription>
-              Compartilhe sua experiência com este produto
+              Compartilhe detalhes sobre sua experiência para ajudar outras mamães
             </CardDescription>
           </CardHeader>
           <CardContent>
             {!showForm ? (
               <Button onClick={() => setShowForm(true)}>
-                Escrever Avaliação
+                Compartilhar Experiência
               </Button>
             ) : (
               <Form {...form}>
@@ -255,11 +255,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                     name="comment"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Comentário</FormLabel>
+                        <FormLabel>Conte sua experiência</FormLabel>
                         <FormControl>
                           <textarea
                             className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                            placeholder="Conte sua experiência com o produto..."
+                            placeholder="Conte detalhadamente como foi sua experiência com este produto. O que mais gostou? Houve algum problema? Recomendaria para outras mamães? (mínimo 150 caracteres)"
                             {...field}
                           />
                         </FormControl>
@@ -281,7 +281,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       Cancelar
                     </Button>
                     <Button type="submit" disabled={submitting}>
-                      {submitting ? "Enviando..." : "Enviar Avaliação"}
+                      {submitting ? "Compartilhando..." : "Compartilhar Experiência"}
                     </Button>
                   </div>
                 </form>
@@ -295,8 +295,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         <Card className="border-green-200 bg-green-50">
           <CardContent className="py-4">
             <p className="text-sm text-green-800">
-              ✅ Você já avaliou este produto. Obrigada por compartilhar sua
-              experiência!
+              ✅ Você já compartilhou sua experiência com este produto. Obrigada por ajudar outras mamães!
             </p>
           </CardContent>
         </Card>
@@ -306,7 +305,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Todas as Avaliações</CardTitle>
+            <CardTitle>Experiências Compartilhadas</CardTitle>
             <Select
               value={sortBy}
               onValueChange={(value) => setSortBy(value as ReviewSortBy)}
@@ -326,7 +325,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             <div className="text-center py-8">
               <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
               <p className="text-muted-foreground">
-                Nenhuma avaliação ainda. Seja o primeiro a avaliar!
+                Nenhuma experiência compartilhada ainda. Seja a primeira a compartilhar!
               </p>
             </div>
           ) : (

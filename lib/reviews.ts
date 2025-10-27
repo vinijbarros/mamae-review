@@ -156,15 +156,11 @@ export async function getProductReviews(
   try {
     const reviewsRef = collection(db, 'reviews');
     
-    // Define campo e direção de ordenação
-    const orderByField = sortBy === 'recent' ? 'createdAt' : 'rating';
-    const orderDirection = sortBy === 'recent' ? 'desc' : 'desc';
-
-    // Monta query com filtro e ordenação
+    // Query simplificada: apenas filtro por productId, sem ordenação
+    // A ordenação será aplicada client-side para evitar problemas de índice
     const q = query(
       reviewsRef,
-      where('productId', '==', productId),
-      orderBy(orderByField, orderDirection)
+      where('productId', '==', productId)
     );
 
     // Executa query
@@ -179,7 +175,20 @@ export async function getProductReviews(
       } as Review);
     });
 
-    return reviews;
+    // Aplicar ordenação client-side
+    const sortedReviews = reviews.sort((a, b) => {
+      if (sortBy === 'recent') {
+        // Ordenar por createdAt (mais recentes primeiro)
+        const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : a.createdAt.toMillis();
+        const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : b.createdAt.toMillis();
+        return bTime - aTime;
+      } else {
+        // Ordenar por rating (maior primeiro)
+        return b.rating - a.rating;
+      }
+    });
+
+    return sortedReviews;
   } catch (error) {
     console.error('❌ Erro ao buscar reviews:', error);
     throw error;
@@ -297,15 +306,11 @@ export function subscribeToProductReviews(
 
   const reviewsRef = collection(db, 'reviews');
   
-  // Define campo e direção de ordenação
-  const orderByField = sortBy === 'recent' ? 'createdAt' : 'rating';
-  const orderDirection = sortBy === 'recent' ? 'desc' : 'desc';
-
-  // Monta query
+  // Query simplificada: apenas filtro por productId, sem ordenação
+  // A ordenação será aplicada client-side para evitar problemas de índice
   const q = query(
     reviewsRef,
-    where('productId', '==', productId),
-    orderBy(orderByField, orderDirection)
+    where('productId', '==', productId)
   );
 
   // onSnapshot retorna uma função de unsubscribe
@@ -320,8 +325,21 @@ export function subscribeToProductReviews(
       } as Review);
     });
     
-    // Chama callback com reviews atualizados
-    callback(reviews);
+    // Aplicar ordenação client-side
+    const sortedReviews = reviews.sort((a, b) => {
+      if (sortBy === 'recent') {
+        // Ordenar por createdAt (mais recentes primeiro)
+        const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : a.createdAt.toMillis();
+        const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : b.createdAt.toMillis();
+        return bTime - aTime;
+      } else {
+        // Ordenar por rating (maior primeiro)
+        return b.rating - a.rating;
+      }
+    });
+    
+    // Chama callback com reviews ordenados
+    callback(sortedReviews);
   });
 }
 

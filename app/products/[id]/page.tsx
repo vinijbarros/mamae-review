@@ -6,8 +6,10 @@ import { getProduct } from "@/lib/products";
 import { Product } from "@/types/product";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/BackButton";
 import { Star, Package, Store, Link as LinkIcon, DollarSign, ArrowLeft } from "lucide-react";
 import { ProductReviews } from "@/components/ProductReviews";
+import { RelatedProducts } from "@/components/RelatedProducts";
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>; // Agora é Promise no Next.js 15
@@ -66,14 +68,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="mb-4"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Voltar
-      </Button>
+      <BackButton href="/products" />
 
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
@@ -129,6 +124,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       </Card>
 
       <ProductReviews productId={productId} />
+
+      <RelatedProducts 
+        category={product.category} 
+        currentProductId={productId} 
+      />
     </div>
   );
 }

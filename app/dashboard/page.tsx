@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { BackButton } from "@/components/BackButton";
 import { getUserProfile, UserProfile } from "@/lib/user";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,11 +51,14 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Bem-vinda, {profile?.name || user?.displayName || "Mamãe"}!
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Bem-vinda, {profile?.name || user?.displayName || "Mamãe"}!
+          </p>
+        </div>
+        <BackButton href="/" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -150,7 +154,7 @@ function DashboardContent() {
               <Link href="/dashboard/products">
                 <Button variant="outline">
                   <Package className="mr-2 h-4 w-4" />
-                  Ver Meus Produtos
+                  Meus Produtos
                 </Button>
               </Link>
               <Link href="/dashboard/products/new">

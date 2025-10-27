@@ -178,3 +178,51 @@ html {
 .nav-button-animated:hover::after {
   animation: border-glow 2s ease-in-out infinite;
 }
+
+/* ============================================
+   Cursor pointer para elementos interativos
+   ============================================ */
+
+/* Botões - cursor pointer */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+/* Links - cursor pointer */
+a,
+[role="link"] {
+  cursor: pointer;
+}
+
+/* Elementos clicáveis customizados */
+[onclick],
+[data-clickable="true"],
+.clickable {
+  cursor: pointer;
+}
+
+/* Selects e elementos de formulário interativos */
+select,
+[role="combobox"],
+[role="listbox"],
+[role="menu"],
+[role="menuitem"] {
+  cursor: pointer;
+}
+
+/* Elementos com hover interativo */
+.hover-pointer:hover {
+  cursor: pointer;
+}
+
+/* Garantir que elementos desabilitados não tenham cursor pointer */
+button:disabled,
+input:disabled,
+select:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}

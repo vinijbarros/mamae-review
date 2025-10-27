@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { Heart, Star, ShoppingBag, Search, Loader2 } from "lucide-react";
+import { Heart, Star, ShoppingBag, Search, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProductCard } from "@/components/ProductCard";
 import { getTopRatedProducts, searchProducts } from "@/lib/products";
 import { Product, PRODUCT_CATEGORIES } from "@/types/product";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,27 +102,65 @@ export default function Home() {
         </div>
         
         <h1 className="text-4xl md:text-6xl font-bold text-foreground font-poppins">
-          Bem-vinda ao{" "}
-          <span className="text-primary">Mamãe Review</span>
+          {user ? (
+            <>
+              Olá, {user.displayName || user.email?.split("@")[0] || "Mamãe"}!{" "}
+              <span className="text-primary">Bem-vinda de volta</span>
+            </>
+          ) : (
+            <>
+              Bem-vinda ao{" "}
+              <span className="text-primary">Mamãe Review</span>
+            </>
+          )}
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Plataforma para famílias e cuidadores compartilharem suas experiências e indicarem produtos essenciais para o enxoval e primeiros anos dos bebês. Encontre as melhores recomendações na nossa comunidade.
+          {user ? (
+            "Compartilhe suas experiências e descubra produtos essenciais recomendados por outras mamães da nossa comunidade."
+          ) : (
+            "Plataforma para famílias e cuidadores compartilharem suas experiências e indicarem produtos essenciais para o enxoval e primeiros anos dos bebês. Encontre as melhores recomendações na nossa comunidade."
+          )}
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-          <Link href="/signup">
-            <Button size="lg" className="rounded-xl shadow-soft hover:scale-105 transition-transform">
-              <Star className="mr-2 h-5 w-5" />
-              Começar Agora
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="outline" size="lg" className="rounded-xl shadow-soft hover:scale-105 transition-transform">
-              <ShoppingBag className="mr-2 h-5 w-5" />
-              Fazer Login
-            </Button>
-          </Link>
+          {!authLoading && (
+            <>
+              {user ? (
+                // Usuário logado - mostrar botões para ações
+                <>
+                  <Link href="/dashboard/products/new">
+                    <Button size="lg" className="rounded-xl shadow-soft hover:scale-105 transition-transform">
+                      <Plus className="mr-2 h-5 w-5" />
+                      Adicionar Produto
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard">
+                    <Button variant="outline" size="lg" className="rounded-xl shadow-soft hover:scale-105 transition-transform">
+                      <Star className="mr-2 h-5 w-5" />
+                      Meu Dashboard
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                // Usuário não logado - mostrar botões de cadastro/login
+                <>
+                  <Link href="/signup">
+                    <Button size="lg" className="rounded-xl shadow-soft hover:scale-105 transition-transform">
+                      <Star className="mr-2 h-5 w-5" />
+                      Começar Agora
+                    </Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button variant="outline" size="lg" className="rounded-xl shadow-soft hover:scale-105 transition-transform">
+                      <ShoppingBag className="mr-2 h-5 w-5" />
+                      Fazer Login
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
 

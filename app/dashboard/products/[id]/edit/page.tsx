@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { BackButton } from "@/components/BackButton";
 import { getProduct, updateProduct } from "@/lib/products";
 import { uploadImage, createImagePreview } from "@/lib/upload";
 import { PRODUCT_CATEGORIES, Product } from "@/types/product";
@@ -220,11 +221,7 @@ function EditProductContent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/products">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+        <BackButton href="/dashboard/products" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Editar Produto</h1>
           <p className="text-muted-foreground">
@@ -343,32 +340,18 @@ function EditProductContent() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descrição</FormLabel>
+                    <FormLabel>Descreva sua experiência com este produto</FormLabel>
                     <FormControl>
                       <div className="space-y-2">
                         <textarea
                           className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                          placeholder="Descreva o produto, suas características, benefícios... (mínimo 150 caracteres)"
+                          placeholder="Conte detalhadamente como foi sua experiência com este produto. O que mais gostou? Houve algum problema? Recomendaria para outras mamães?"
                           {...field}
                         />
                         <div className="flex justify-between text-sm">
-                          <span className={`${
-                            field.value.length < 150 
-                              ? 'text-red-500' 
-                              : field.value.length > 500 
-                                ? 'text-red-500' 
-                                : 'text-muted-foreground'
-                          }`}>
-                            {field.value.length < 150 
-                              ? `Mínimo 150 caracteres (${150 - field.value.length} restantes)`
-                              : `${field.value.length}/500 caracteres`
-                            }
+                          <span className="text-muted-foreground">
+                            {field.value.length}/500 caracteres
                           </span>
-                          {field.value.length > 500 && (
-                            <span className="text-red-500">
-                              Máximo 500 caracteres excedido
-                            </span>
-                          )}
                         </div>
                       </div>
                     </FormControl>
