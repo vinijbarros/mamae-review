@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 // Schema de validação com Zod

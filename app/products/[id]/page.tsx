@@ -7,7 +7,7 @@ import { Product } from "@/types/product";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/BackButton";
-import { Star, Package, Store, Link as LinkIcon, DollarSign, ArrowLeft } from "lucide-react";
+import { Star, Package, Store, Link as LinkIcon, DollarSign } from "lucide-react";
 import { ProductReviews } from "@/components/ProductReviews";
 import { RelatedProducts } from "@/components/RelatedProducts";
 
