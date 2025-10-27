@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { BackButton } from "@/components/BackButton";
 import { getAllProducts, searchProducts } from "@/lib/products";
 import { Product, PRODUCT_CATEGORIES } from "@/types/product";
+import { DocumentSnapshot } from "firebase/firestore";
 
 export default function AllProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,7 +17,7 @@ export default function AllProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [lastDoc, setLastDoc] = useState<unknown>(null);
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
   // Debounce da busca
